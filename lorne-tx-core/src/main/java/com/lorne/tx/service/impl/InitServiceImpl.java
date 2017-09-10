@@ -1,5 +1,7 @@
 package com.lorne.tx.service.impl;
 
+import com.lorne.tx.db.IBaseProxy;
+import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.InitService;
@@ -26,8 +28,21 @@ public class InitServiceImpl implements InitService {
     @Autowired
     private TimeOutService timeOutService;
 
+    @Autowired
+    private DataSourceService dataSourceService;
+
+    @Autowired
+    private IBaseProxy baseProxy;
+
     @Override
     public void start() {
+
+        /**
+         * 由于SQLSessionFactory等类的加载方式导致，无法通过
+         * bean自动注入的方式注入给代理对象，因此通过初始化的时候再为其赋值。
+         */
+        baseProxy.setDataSourceService(dataSourceService);
+
         nettyService.start();
         logger.info("socket-start..");
 

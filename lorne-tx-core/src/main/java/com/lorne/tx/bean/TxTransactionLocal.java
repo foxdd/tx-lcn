@@ -22,9 +22,10 @@ public class TxTransactionLocal {
 
     private String kid;
 
-  //  private String compensateId;
 
     private TransactionRecover recover;
+
+    private String type;
 
     public TransactionRecover getRecover() {
         return recover;
@@ -87,13 +88,6 @@ public class TxTransactionLocal {
         this.maxTimeOut = maxTimeOut;
     }
 
-//    public String getCompensateId() {
-//        return compensateId;
-//    }
-//
-//    public void setCompensateId(String compensateId) {
-//        this.compensateId = compensateId;
-//    }
 
     public static TxTransactionLocal current() {
         return currentLocal.get();
@@ -104,4 +98,11 @@ public class TxTransactionLocal {
     }
 
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
+    }
 }

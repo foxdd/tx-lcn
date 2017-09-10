@@ -29,7 +29,7 @@ public class TaskGroupManager {
     }
 
     public TaskGroup createTask(String key,String type) {
-        TaskGroup taskGroup = getTask(key);
+        TaskGroup taskGroup = getTaskGroup(key);
         if(taskGroup==null){
             taskGroup = new TaskGroup();
         }
@@ -44,8 +44,22 @@ public class TaskGroupManager {
         return taskGroup;
     }
 
-    public TaskGroup getTask(String key) {
+    public TaskGroup getTaskGroup(String key) {
         return taskMap.get(key);
+    }
+
+
+    public TxTask getTask(String key,String type) {
+        String taskKey = type+"_"+key;
+        TaskGroup txGroup =  taskMap.get(key);
+        if(txGroup!=null){
+            for(TxTask task:txGroup.getTasks()){
+                if(taskKey.equals(task.getKey())){
+                    return task;
+                }
+            }
+        }
+        return null;
     }
 
 

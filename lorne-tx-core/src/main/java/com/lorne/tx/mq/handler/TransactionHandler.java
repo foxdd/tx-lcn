@@ -133,7 +133,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         //通知提醒
                         final int state = resObj.getInteger("c");
                         String taskId = resObj.getString("t");
-                        TaskGroup task = TaskGroupManager.getInstance().getTask(taskId);
+                        TaskGroup task = TaskGroupManager.getInstance().getTaskGroup(taskId);
                         logger.info("接受通知数据->" + json);
                         if (task != null) {
                             if (task.isAwait()) {   //已经等待

@@ -2,12 +2,12 @@ package com.lorne.tx.service.impl;
 
 import com.lorne.core.framework.exception.ServiceException;
 import com.lorne.core.framework.utils.KidUtils;
-import com.lorne.core.framework.utils.task.ConditionUtils;
-import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
-import com.lorne.tx.db.AbstractResourceProxy;
+import com.lorne.tx.db.IBaseProxy;
+import com.lorne.tx.db.task.TaskGroupManager;
+import com.lorne.tx.db.task.TxTask;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.TransactionServer;
@@ -32,8 +32,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
 
     @Autowired
-    private AbstractResourceProxy resourceProxy;
-
+    private IBaseProxy group;
 
 
     private Logger logger = LoggerFactory.getLogger(TxRunningTransactionServerImpl.class);
@@ -41,12 +40,13 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
 
+
         String kid = KidUtils.generateShortUuid();
         String txGroupId = info.getTxGroupId();
         logger.info("tx-running-start->" + txGroupId);
         long t1 = System.currentTimeMillis();
 
-        boolean isHasIsGroup =  resourceProxy.hasGroup(txGroupId);
+        boolean isHasIsGroup =  group.hasGroup(txGroupId);
 
 
         TransactionRecover recover = new TransactionRecover();
@@ -66,7 +66,13 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
             Object res = point.proceed();
 
-            Task waitTask = ConditionUtils.getInstance().getTask(kid);
+            String type = txTransactionLocal.getType();
+
+            TxTask waitTask = TaskGroupManager.getInstance().getTask(kid,type);
+
+            if(waitTask==null){
+                throw new ServiceException("修改事务组状态异常." + txGroupId);
+            }
 
             //lcn 连接已经开始等待时.
             while (waitTask!=null&&!waitTask.isAwait()) {

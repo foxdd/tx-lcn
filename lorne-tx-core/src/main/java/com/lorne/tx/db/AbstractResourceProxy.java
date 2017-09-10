@@ -7,7 +7,6 @@ import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.service.DataSourceService;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,20 +15,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * create by lorne on 2017/8/22
  */
 
-public abstract class AbstractResourceProxy<C,T extends IResource> {
+public abstract class AbstractResourceProxy<C,T extends IResource> implements IBaseProxy{
 
 
     protected Map<String, T> pools = new ConcurrentHashMap<>();
 
 
-    @Autowired
     protected DataSourceService dataSourceService;
 
 
+    @Override
     public boolean hasGroup(String group){
         return pools.containsKey(group);
     }
 
+
+    @Override
+    public void setDataSourceService(DataSourceService dataSourceService) {
+        this.dataSourceService =dataSourceService;
+    }
 
     //default size
     protected volatile int maxCount = 5;

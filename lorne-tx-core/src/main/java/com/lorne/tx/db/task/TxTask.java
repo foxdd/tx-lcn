@@ -72,7 +72,7 @@ public class TxTask extends Task{
         boolean hasData = true;//true没有，false有
 
         String groupKey = getKey().split("_")[1];
-        TaskGroup taskGroup =  TaskGroupManager.getInstance().getTask(groupKey);
+        TaskGroup taskGroup =  TaskGroupManager.getInstance().getTaskGroup(groupKey);
         for(TxTask task: taskGroup.getTasks()){
             if(!task.isRemove()){
                 hasData = false;
