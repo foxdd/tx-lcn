@@ -2,6 +2,7 @@ package com.lorne.tx.bean;
 
 import com.lorne.tx.annotation.TxTransaction;
 import com.lorne.tx.compensate.model.TransactionInvocation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 
@@ -14,13 +15,13 @@ public class TxTransactionInfo {
 
     private TxTransaction transaction;
 
+    private Transactional transactional;
+
     private TxTransactionLocal txTransactionLocal;
 
     private String txGroupId;
 
     private int maxTimeOut;
-
-    private TransactionLocal transactionLocal;
 
 
     private TxTransactionCompensate compensate;
@@ -29,23 +30,21 @@ public class TxTransactionInfo {
     private TransactionInvocation invocation;
 
 
-    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, int maxTimeOut, TransactionLocal transactionLocal, TxTransactionCompensate compensate, TransactionInvocation invocation) {
+    public TxTransactionInfo(TxTransaction transaction,Transactional transactional, TxTransactionLocal txTransactionLocal, String txGroupId, int maxTimeOut, TxTransactionCompensate compensate, TransactionInvocation invocation) {
         this.transaction = transaction;
         this.txTransactionLocal = txTransactionLocal;
         this.txGroupId = txGroupId;
         this.maxTimeOut = maxTimeOut;
-        this.transactionLocal = transactionLocal;
         this.compensate = compensate;
         this.invocation = invocation;
+        this.transactional = transactional;
     }
 
     public int getMaxTimeOut() {
         return maxTimeOut;
     }
 
-    public TransactionLocal getTransactionLocal() {
-        return transactionLocal;
-    }
+
 
     public TxTransaction getTransaction() {
         return transaction;
@@ -65,5 +64,9 @@ public class TxTransactionInfo {
 
     public TransactionInvocation getInvocation() {
         return invocation;
+    }
+
+    public Transactional getTransactional() {
+        return transactional;
     }
 }

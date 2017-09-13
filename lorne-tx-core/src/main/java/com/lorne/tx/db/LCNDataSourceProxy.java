@@ -3,9 +3,7 @@ package com.lorne.tx.db;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.db.relational.AbstractDBConnection;
 import com.lorne.tx.db.relational.LCNDBConnection;
-import com.lorne.tx.db.service.DataSourceService;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -43,11 +41,19 @@ public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,Abstrac
     }
 
 
-
-
+    @Override
+    protected void initDbType() {
+        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
+        if(txTransactionLocal!=null) {
+            //设置db类型
+            txTransactionLocal.setType("db");
+        }
+    }
 
     @Override
     public Connection getConnection() throws SQLException {
+        initDbType();
+
         Connection connection = loadConnection();
         if(connection==null) {
              connection = initLCNConnection(dataSource.getConnection());
@@ -62,6 +68,9 @@ public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,Abstrac
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
+
+        initDbType();
+
         Connection connection = loadConnection();
         if(connection==null) {
             return initLCNConnection(dataSource.getConnection(username, password));

@@ -40,14 +40,12 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
 
-
         String kid = KidUtils.generateShortUuid();
         String txGroupId = info.getTxGroupId();
         logger.info("tx-running-start->" + txGroupId);
         long t1 = System.currentTimeMillis();
 
         boolean isHasIsGroup =  group.hasGroup(txGroupId);
-
 
         TransactionRecover recover = new TransactionRecover();
         recover.setId(KidUtils.generateShortUuid());
@@ -60,32 +58,39 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         txTransactionLocal.setHasStart(false);
         txTransactionLocal.setRecover(recover);
         txTransactionLocal.setKid(kid);
+        txTransactionLocal.setTransactional(info.getTransactional());
         txTransactionLocal.setMaxTimeOut(info.getMaxTimeOut());
         TxTransactionLocal.setCurrent(txTransactionLocal);
+
+
         try {
 
             Object res = point.proceed();
 
-            String type = txTransactionLocal.getType();
+            if(!txTransactionLocal.isReadOnly()) {
 
-            TxTask waitTask = TaskGroupManager.getInstance().getTask(kid,type);
+                String type = txTransactionLocal.getType();
 
-            if(waitTask==null){
-                throw new ServiceException("修改事务组状态异常." + txGroupId);
-            }
+                TxTask waitTask = TaskGroupManager.getInstance().getTask(kid, type);
 
-            //lcn 连接已经开始等待时.
-            while (waitTask!=null&&!waitTask.isAwait()) {
-                TimeUnit.MILLISECONDS.sleep(1);
-            }
+                if (waitTask == null) {
+                    throw new ServiceException("修改事务组状态异常." + txGroupId);
+                }
 
-            final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, isHasIsGroup);
+                //lcn 连接已经开始等待时.
+                while (waitTask != null && !waitTask.isAwait()) {
+                    TimeUnit.MILLISECONDS.sleep(1);
+                }
 
-            if (resTxGroup == null) {
-                //修改事务组状态异常
-                waitTask.setState(-1);
-                waitTask.signalTask();
-                throw new ServiceException("修改事务组状态异常." + txGroupId);
+
+                final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, isHasIsGroup);
+
+                if (resTxGroup == null) {
+                    //修改事务组状态异常
+                    waitTask.setState(-1);
+                    waitTask.signalTask();
+                    throw new ServiceException("修改事务组状态异常." + txGroupId);
+                }
             }
 
             return res;

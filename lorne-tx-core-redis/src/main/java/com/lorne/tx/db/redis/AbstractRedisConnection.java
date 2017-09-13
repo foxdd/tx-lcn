@@ -101,7 +101,7 @@ public abstract class AbstractRedisConnection implements RedisConnection,IResour
         compensateList.add(nowCompensate);
 
         if (!CompensateService.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
-            TaskGroup taskGroup = TaskGroupManager.getInstance().createTask(transactionLocal.getKid(),"redis");
+            TaskGroup taskGroup = TaskGroupManager.getInstance().createTask(transactionLocal.getKid(),transactionLocal.getType());
             waitTask = taskGroup.getCurrent();
             logger.info("task-create-> " + waitTask.getKey());
         }

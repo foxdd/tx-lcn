@@ -62,6 +62,7 @@ public abstract class AbstractResourceProxy<C,T extends IResource> implements IB
 
     protected T loadConnection(){
         TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
+
         if(txTransactionLocal==null){
             return null;
         }
@@ -80,6 +81,7 @@ public abstract class AbstractResourceProxy<C,T extends IResource> implements IB
     protected abstract C createLcnConnection(C connection, TxTransactionLocal txTransactionLocal);
 
 
+    protected abstract void initDbType();
 
     private C createConnection(TxTransactionLocal txTransactionLocal, C connection){
         if (nowCount == maxCount) {
@@ -110,15 +112,24 @@ public abstract class AbstractResourceProxy<C,T extends IResource> implements IB
         C lcnConnection = connection;
         TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
 
-        if (txTransactionLocal != null
-            && StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
-            if(TxTransactionCompensate.current()!=null){
+        if (txTransactionLocal != null) {
+
+            //只读操作，直接返回connection
+            if(txTransactionLocal.isReadOnly()){
                 return connection;
-            }else if (CompensateService.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
-                lcnConnection = createConnection(txTransactionLocal, connection);
-            } else if (!txTransactionLocal.isHasStart()) {
-                lcnConnection = createConnection(txTransactionLocal, connection);
             }
+
+            //更新操作的开启LCN分布式事务
+            if(StringUtils.isNotEmpty(txTransactionLocal.getGroupId())){
+                if(TxTransactionCompensate.current()!=null){
+                    return connection;
+                }else if (CompensateService.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
+                    lcnConnection = createConnection(txTransactionLocal, connection);
+                } else if (!txTransactionLocal.isHasStart()) {
+                    lcnConnection = createConnection(txTransactionLocal, connection);
+                }
+            }
+
 
         }
         return lcnConnection;

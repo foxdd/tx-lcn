@@ -1,7 +1,6 @@
 package com.lorne.tx.service.impl;
 
 import com.lorne.tx.annotation.TxTransaction;
-import com.lorne.tx.bean.TransactionLocal;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
@@ -13,6 +12,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 
@@ -36,18 +36,18 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
 
         TxTransaction transaction = thisMethod.getAnnotation(TxTransaction.class);
 
-        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
+        Transactional transactional = thisMethod.getAnnotation(Transactional.class);
 
-        TransactionLocal transactionLocal = TransactionLocal.current();
+        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
 
         TxTransactionCompensate compensate = TxTransactionCompensate.current();
 
         TransactionInvocation invocation = new TransactionInvocation(clazz, thisMethod.getName(), args, method.getParameterTypes());
 
-        TxTransactionInfo state = new TxTransactionInfo(transaction,txTransactionLocal,groupId,maxTimeOut,transactionLocal,compensate,invocation);
+        TxTransactionInfo info = new TxTransactionInfo(transaction,transactional,txTransactionLocal,groupId,maxTimeOut,compensate,invocation);
 
-        TransactionServer server = transactionServerFactoryService.createTransactionServer(state);
+        TransactionServer server = transactionServerFactoryService.createTransactionServer(info);
 
-        return server.execute(point, state);
+        return server.execute(point, info);
     }
 }

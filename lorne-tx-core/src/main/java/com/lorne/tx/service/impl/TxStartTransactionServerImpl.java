@@ -29,7 +29,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
 
 
     @Override
-    public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
+    public Object execute(ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {
         //分布式事务开始执行
         logger.info("tx-start");
 
@@ -46,6 +46,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
             txTransactionLocal.setGroupId(groupId);
             txTransactionLocal.setHasStart(true);
+            txTransactionLocal.setTransactional(info.getTransactional());
             txTransactionLocal.setMaxTimeOut(Constants.maxOutTime);
             TxTransactionLocal.setCurrent(txTransactionLocal);
             Object obj = point.proceed();
