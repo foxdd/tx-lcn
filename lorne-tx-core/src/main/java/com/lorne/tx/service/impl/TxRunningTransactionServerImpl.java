@@ -67,29 +67,32 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
             Object res = point.proceed();
 
+            //写操作 处理
             if(!txTransactionLocal.isReadOnly()) {
 
-                String type = txTransactionLocal.getType();
+                TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, isHasIsGroup);
 
-                TxTask waitTask = TaskGroupManager.getInstance().getTask(kid, type);
+                //已经进入过该模块的
+                if(!isHasIsGroup) {
+                    String type = txTransactionLocal.getType();
 
-                if (waitTask == null) {
-                    throw new ServiceException("修改事务组状态异常." + txGroupId);
-                }
+                    TxTask waitTask = TaskGroupManager.getInstance().getTask(kid, type);
 
-                //lcn 连接已经开始等待时.
-                while (waitTask != null && !waitTask.isAwait()) {
-                    TimeUnit.MILLISECONDS.sleep(1);
-                }
+                    //lcn 连接已经开始等待时.
+                    while (waitTask != null && !waitTask.isAwait()) {
+                        TimeUnit.MILLISECONDS.sleep(1);
+                    }
 
+                    if (resTxGroup == null) {
 
-                final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, isHasIsGroup);
-
-                if (resTxGroup == null) {
-                    //修改事务组状态异常
-                    waitTask.setState(-1);
-                    waitTask.signalTask();
-                    throw new ServiceException("修改事务组状态异常." + txGroupId);
+                        //通知业务回滚事务
+                        if (waitTask != null) {
+                            //修改事务组状态异常
+                            waitTask.setState(-1);
+                            waitTask.signalTask();
+                            throw new ServiceException("修改事务组状态异常." + txGroupId);
+                        }
+                    }
                 }
             }
 
